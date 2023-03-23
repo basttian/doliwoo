@@ -29,7 +29,7 @@
 /**
  * Parameters management
  */
-class Doliwoo_WC_Params {
+Class Doliwoo_WC_Params {
 
 	/**
 	 * Save Dolibarr ID field on edit user pages
@@ -40,13 +40,11 @@ class Doliwoo_WC_Params {
 	 */
 	public function save_customer_meta_fields( $user_id ) {
 		$save_fields = $this->get_customer_meta_fields();
-		if ( ! empty( $_POST ) && check_admin_referer( 'update-user_' . $user_id ) ) {
-			foreach ( $save_fields as $fieldset ) {
-				foreach ( $fieldset['fields'] as $key => $field ) {
-					if ( isset( $_POST[ $key ] ) ) {
-						update_user_meta( $user_id, $key, wc_clean( $_POST[ $key ] )
-						);
-					}
+		foreach ( $save_fields as $fieldset ) {
+			foreach ( $fieldset['fields'] as $key => $field ) {
+				if ( isset( $_POST[ $key ] ) ) {
+					update_user_meta( $user_id, $key, wc_clean( $_POST[ $key ] )
+					);
 				}
 			}
 		}
@@ -62,17 +60,19 @@ class Doliwoo_WC_Params {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			return null;
 		}
-		$dolibarr_id = array(
-			'label'       => __( 'User ID', 'doliwoo' ),
-			'description' => __( 'The Dolibarr ID for this user', 'doliwoo' ),
-		);
-		$dolibarr = array(
-			'title'  => __( 'Dolibarr', 'doliwoo' ),
-			'fields' => array( 'dolibarr_id' => $dolibarr_id ),
-		);
 		$show_fields = apply_filters(
 			'customer_meta_fields',
-			array( 'dolibarr' => $dolibarr )
+			array(
+				'dolibarr' => array(
+					'title'  => __( 'Dolibarr', 'doliwoo' ),
+					'fields' => array(
+						'dolibarr_id' => array(
+							'label'       => __( 'User ID', 'doliwoo' ),
+							'description' => __( 'The Dolibarr ID for this user', 'doliwoo' ),
+						)
+					)
+				)
+			)
 		);
 
 		return $show_fields;
@@ -93,7 +93,7 @@ class Doliwoo_WC_Params {
 
 		$show_fields = $this->get_customer_meta_fields();
 		foreach ( $show_fields as $fieldset ) {
-			echo '<h3>', esc_html( $fieldset['title'] ), '</h3>',
+			echo '<h3>', $fieldset['title'], '</h3>',
 			'<table class="form-table">';
 			foreach ( $fieldset['fields'] as $key => $field ) {
 				echo '<tr>',
@@ -122,7 +122,7 @@ class Doliwoo_WC_Params {
 	 */
 	public function user_column_values( $value, $column_name, $user_id ) {
 		$user = get_userdata( $user_id );
-		if ( 'dolibarr_id' === $column_name ) {
+		if ( 'dolibarr_id' == $column_name ) {
 			return get_user_meta( $user->ID, 'dolibarr_id', true );
 		}
 		return $value;

@@ -44,15 +44,14 @@ class Doliwoo_WC_Tax extends WC_Tax {
 		// Add missing standard rate
 		$tax_classes[] = '';
 
-		foreach ( $tax_classes as $class ) {
+		foreach ( $tax_classes as $k => $class ) {
 			$rates = $this->get_rates( $class );
 			$rates_values = array_values( $rates );
-			if ( floatval( $rates_values[0]['rate'] ) === $tax_rate ) {
+			if ( !empty($rates_values[0]['rate']) && $rates_values[0]['rate'] == $tax_rate ) {
 				// Use the first class found
 				return $class;
 			}
 		}
-
 		// No class found, use the standard rate
 		return '';
 	}
@@ -94,7 +93,7 @@ class Doliwoo_WC_Tax extends WC_Tax {
 		$declared_classes = wp_list_pluck( $declared_rates, 'tax_rate_class' );
 		$database_classes = wp_list_pluck( $database_rates, 'tax_rate_class' );
 		foreach ( $declared_classes as $key => $class ) {
-			if ( ! in_array( $class, $database_classes, true ) ) {
+			if ( ! in_array( $class, $database_classes ) ) {
 				$to_create = $declared_rates[ $key ];
 				$this->insert_tax( $to_create );
 			}
@@ -104,7 +103,7 @@ class Doliwoo_WC_Tax extends WC_Tax {
 		foreach ( $declared_rates as $declared_rate ) {
 			foreach ( $database_rates as $tax_rate_id => $database_rate ) {
 				if ( $declared_rate['tax_rate_class']
-				     === $database_rate['tax_rate_class']
+				     == $database_rate['tax_rate_class']
 				) {
 					// _assoc is important. It allows strict checking to take 0 into account!
 					if ( array_diff_assoc( $declared_rate, $database_rate ) ) {

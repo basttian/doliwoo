@@ -98,25 +98,17 @@ class Doliwoo_Dolibarr {
 
 		// Fill this array with all data required to create an order in Dolibarr
 		$user_id = get_current_user_id();
-		if ( 0 === $user_id ) {
+		if ( '' == $user_id ) {
 			// default to the generic user
 			$thirdparty_id = $this->settings->dolibarr_generic_id;
 		} else {
-			$thirdparty_id = intval( get_user_meta( $user_id, 'dolibarr_id', true ) );
+			$thirdparty_id = get_user_meta( $user_id, 'dolibarr_id', true );
 		}
-		if ( 0 !== $thirdparty_id ) {
-			$order->thirdparty_id = $thirdparty_id;
+		if ( '' != $thirdparty_id ) {
+			$order->thirdparty_id = intval( $thirdparty_id );
 		} else {
-			if ( 0 === intval( get_user_meta( $user_id, 'billing_company', true ) ) ) {
-				if ( wp_verify_nonce( 'woocommerce-cart' ) ) {
-					$billing_company = $_POST['billing_company'];
-				} else {
-					// TODO: fail message?
-					$this->logger->add( 'doliwoo', 'Failed to verify nonce' );
-					exit;
-				}
-
-				update_user_meta( $user_id, 'billing_company', $billing_company );
+			if ( get_user_meta( $user_id, 'billing_company', true ) == '' ) {
+				update_user_meta( $user_id, 'billing_company', $_POST['billing_company'] );
 			}
 			$this->dolibarr_create_thirdparty_if_not_exists( $user_id );
 			$order->thirdparty_id = intval( get_user_meta( $user_id, 'dolibarr_id', true ) );
@@ -138,7 +130,7 @@ class Doliwoo_Dolibarr {
 			return;
 		}
 
-		if ( ! ( 'OK' === $result['result']->result_code ) ) {
+		if ( ! ( 'OK' == $result['result']->result_code ) ) {
 			$this->logger->add(
 				'doliwoo',
 				'createOrder response: ' . $result['result']->result_code . ': ' . $result['result']->result_label
@@ -209,7 +201,7 @@ class Doliwoo_Dolibarr {
 			return null;
 		}
 
-		if ( ! ( 'OK' === $result['result']->result_code ) ) {
+		if ( ! ( 'OK' == $result['result']->result_code ) ) {
 			$this->logger->add(
 				'doliwoo',
 				'getThirdParty response: ' . $result['result']->result_code . ': ' . $result['result']->result_label
@@ -227,7 +219,7 @@ class Doliwoo_Dolibarr {
 	 *
 	 * @param int $user_id A Wordpress user ID
 	 *
-	 * @return array $result The SOAP response
+	 * @return array() $result The SOAP response
 	 */
 	public function dolibarr_create_thirdparty( $user_id ) {
 		/*
@@ -251,7 +243,7 @@ class Doliwoo_Dolibarr {
 
 		$ref        = get_user_meta( $user_id, 'billing_company', true );
 		$individual = 0;
-		if ( '' === $ref ) {
+		if ( '' == $ref ) {
 			// We could not find a company, let's get an indivual
 			$ref        = get_user_meta( $user_id, 'billing_last_name', true );
 			$individual = 1;
@@ -284,7 +276,7 @@ class Doliwoo_Dolibarr {
 			return null;
 		}
 
-		if ( ! ( 'OK' === $result['result']->result_code ) ) {
+		if ( ! ( 'OK' == $result['result']->result_code ) ) {
 			$this->logger->add(
 				'doliwoo',
 				'createThirdParty response: ' . $result['result']->result_code . ': ' . $result['result']->result_label
@@ -362,7 +354,7 @@ class Doliwoo_Dolibarr {
 			return;
 		}
 
-		if ( ! ( 'OK' === $result['result']->result_code ) ) {
+		if ( ! ( 'OK' == $result['result']->result_code ) ) {
 			$this->logger->add(
 				'doliwoo',
 				'getProductsForCategory response: ' . $result['result']->result_code . ': ' . $result['result']->result_label
@@ -377,7 +369,7 @@ class Doliwoo_Dolibarr {
 
 		if ( ! empty( $dolibarr_products ) ) {
 			foreach ( $dolibarr_products as $dolibarr_product ) {
-				if ( '0' === $dolibarr_product->status_tosell ) {
+				if ( 0 == $dolibarr_product->status_tosell ) {
 					// This product is not for sale, let's skip it.
 					continue;
 				}
@@ -456,12 +448,12 @@ class Doliwoo_Dolibarr {
 		update_post_meta(
 			$post_id,
 			'_tax_class',
-			$this->taxes->get_tax_class( floatval( $dolibarr_product->vat_rate ) )
+			$this->taxes->get_tax_class( $dolibarr_product->vat_rate )
 		);
 		update_post_meta( $post_id, '_manage_stock', 'no' );
 
 		// Stock management
-		if ( 'yes' === get_option( 'woocommerce_manage_stock' ) ) {
+		if ( 'yes' == get_option( 'woocommerce_manage_stock' ) ) {
 			if ( 0 < $dolibarr_product->stock_real ) {
 				update_post_meta( $post_id, '_stock_status', 'instock' );
 				update_post_meta( $post_id, '_stock', $dolibarr_product->stock_real );
@@ -485,9 +477,6 @@ class Doliwoo_Dolibarr {
 	 * @param int $post_id The WooCommerce product
 	 */
 	private function import_product_images( $dolibarr_product, $post_id ) {
-		// Delete existing images
-		$this->delete_post_attachments( $post_id );
-
 		$image_attachment_ids = $this->get_product_image( $dolibarr_product, $post_id );
 
 		// Use the first image as the product thumbnail
@@ -495,29 +484,6 @@ class Doliwoo_Dolibarr {
 
 		// Fill the image gallery
 		update_post_meta( $post_id, '_product_image_gallery', implode( ',', $image_attachment_ids ) );
-	}
-
-	/**
-	 * Delete post attachments
-	 *
-	 * @param int $post_id WooCommerce product ID
-	 */
-	private function delete_post_attachments( $post_id ) {
-		$attachments = get_posts( array(
-			'post_type'      => 'attachment',
-			'posts_per_page' => - 1,
-			'post_status'    => 'any',
-			'post_parent'    => $post_id,
-		) );
-
-		foreach ( $attachments as $attachment ) {
-			if ( false === wp_delete_attachment( $attachment->ID , true ) ) {
-				$this->logger->add(
-					'doliwoo',
-					'Failed to delete attachment #' . $attachment->ID . ' from post #' . $post_id
-				);
-			}
-		}
 	}
 
 	/**
@@ -561,7 +527,7 @@ class Doliwoo_Dolibarr {
 				continue;
 			}
 
-			if ( ! ( 'OK' === $result['result']->result_code ) ) {
+			if ( ! ( 'OK' == $result['result']->result_code ) ) {
 				$this->logger->add(
 					'doliwoo',
 					'getDocument response: ' . $result['result']->result_code . ': ' . $result['result']->result_label

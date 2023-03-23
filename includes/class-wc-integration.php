@@ -54,10 +54,10 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 		/** @var string Dolibarr entity we want webservice responses from */
 		public $dolibarr_entity;
 
-		/** @var int ID of the Dolibarr category we sync products from */
+		/** @var string ID of the Dolibarr category we sync products from */
 		public $dolibarr_category_id;
 
-		/** @var int ID of the Dolibarr thirdparty to use when we make a sale without a user logged in */
+		/** @var string ID of the Dolibarr thirdparty to use when we make a sale without a user logged in */
 		public $dolibarr_generic_id;
 
 		/** @var int[] The distant Dolibarr version */
@@ -199,7 +199,7 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 
 			$field = $this->plugin_id . $this->id . '_' . $key;
 
-			if ( empty( $this->dolibarr_version ) ) {
+			if ( empty ( $this->dolibarr_version ) ) {
 				$message = __( 'Please configure the plugin.', 'doliwoo' );
 			} else {
 				if (
@@ -240,10 +240,7 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 		 * @return string The form value
 		 */
 		public function validate_dolibarr_ws_endpoint_field( $key ) {
-			// Check nonce
-			if ( ! empty( $_POST ) && check_admin_referer( 'woocommerce-settings' ) ) {
-				$value = $_POST[ $this->plugin_id . $this->id . '_' . $key ];
-			}
+			$value = $_POST[ $this->plugin_id . $this->id . '_' . $key ];
 
 			// Make sure we use HTTPS
 			if ( 'https://' !== ( substr( $value, 0, 8 ) ) ) {
@@ -295,7 +292,7 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 		 *
 		 * @return void
 		 */
-		public function display_errors() {
+		public function display_errors( ) {
 			if ( empty( $this->errors ) ) {
 				// Nothing to do
 				return;
@@ -328,15 +325,15 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 			$webservice = '',
 			$ws_auth = array()
 		) {
-			if ( empty( $webservice ) && ! empty( $this->dolibarr_ws_endpoint ) ) {
+			if ( empty ( $webservice ) && ! empty ( $this->dolibarr_ws_endpoint ) ) {
 				$webservice = $this->dolibarr_ws_endpoint;
 			}
-			if ( empty( $webservice ) ) {
+			if ( empty ( $webservice ) ) {
 				// We don't want to check unconfigured plugin
 				return;
 			}
 
-			if ( empty( $ws_auth ) ) {
+			if ( empty ( $ws_auth ) ) {
 				$ws_auth  = array(
 					'dolibarrkey'       => $this->dolibarr_key,
 					'sourceapplication' => $this->sourceapplication,
@@ -367,7 +364,7 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 				return;
 			}
 
-			if ( 'OK' === $response['result']->result_code ) {
+			if ( 'OK' == $response['result']->result_code ) {
 				$this->dolibarr_version = explode( '.', $response['dolibarr'] );
 			} else {
 				$this->errors[] = 'Webservice error:' . $response['result']->result_label;
