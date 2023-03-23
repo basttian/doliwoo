@@ -67,8 +67,7 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 	// If WooCommerce is active
 	if ( in_array(
 		'woocommerce/woocommerce.php',
-		apply_filters( 'active_plugins', get_option( 'active_plugins' ) ),
-		true
+		apply_filters( 'active_plugins', get_option( 'active_plugins' ) )
 	) ) {
 		if ( ! class_exists( 'Doliwoo' ) ) {
 
@@ -149,8 +148,8 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 					);
 
 					// Schedule the import of product data from Dolibarr
-					register_activation_hook( __FILE__, 'activation' );
-					register_deactivation_hook( __FILE__, 'deactivation' );
+					register_activation_hook( __FILE__, array(&$this,'activation') );
+					register_deactivation_hook( __FILE__, array(&$this,'deactivation') );
 				}
 
 				/**
@@ -255,6 +254,6 @@ if ( ! class_exists( 'Doliwoo_WC_Integration' ) ) :
 		exit;
 	}
 
-	$doliwoo = new Doliwoo();
+	$Doliwoo = new Doliwoo();
 
 	endif;
